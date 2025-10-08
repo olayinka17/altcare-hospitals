@@ -29,6 +29,7 @@ const sendProdError = (err, req, res) => {
     });
   }
 
+  console.error(err)
   return res.status(500).json({
     status: "error",
     message: "something went wrong",
@@ -44,7 +45,7 @@ export default (err, req, res, next) => {
   } else if (process.env.NODE_ENV === "production") {
     let error = Object.create(err);
     if (error.code === "P2002") error = handleDuplicateDb(error);
-    if (error.cod === "P2003") error = handleforeignkeyError(error);
+    if (error.code === "P2003") error = handleforeignkeyError(error);
     sendProdError(error, req, res);
   }
 };
