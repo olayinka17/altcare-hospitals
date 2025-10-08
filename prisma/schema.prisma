@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Hospital {
+  id            String             @id @default(uuid())
+  name          String
+  address       String
+  slug          String             @unique
+  created_at    DateTime           @default(now())
+  updated_at    DateTime           @updatedAt
+  practitioners Practitioner[]
+  patients      Hospital_patient[]
+}
+
+model Hospital_patient {
+  hospital_id String
+  patient_id  String
+  created_at  DateTime @default(now())
+  hospital    Hospital @relation(fields: [hospital_id], references: [id])
+  patient     Patient  @relation(fields: [patient_id], references: [id])
+
+  @@id([hospital_id, patient_id])
+}
+
+model Patient {
+  id                   String                 @id @default(uuid())
+  name                 String
+  email                String                 @unique
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+  NIN                  String
+  gender               Gender
+  Patient_record       Patient_records?
+  Patient_practitioner Patient_practitioner[]
+  hospitals            Hospital_patient[]
+}
+
+model Practitioner {
+  id                   String                 @id @default(uuid())
+  name                 String
+  professional_id      String
+  hospital_id          String
+  email                String
+  created_at           DateTime               @default(now())
+  update_at            DateTime               @updatedAt
+  role                 Role
+  labTests             Lab_test[]
+  Patient_practitioner Patient_practitioner[]
+  diagnoses            Diagnosis[]
+  hospital             Hospital               @relation(fields: [hospital_id], references: [id])
+  Medication_items     Medication_items[]
+}
+
+model Patient_practitioner {
+  patient_id       String
+  practititoner_id String
+  assigned_at      DateTime
+  patient          Patient      @relation(fields: [patient_id], references: [id])
+  practitioner     Practitioner @relation(fields: [practititoner_id], references: [id])
+
+  @@id([patient_id, practititoner_id])
+}
+
+model Patient_records {
+  id              String             @id @default(uuid())
+  patient_id      String             @unique
+  hospital_id     String
+  blood_type      String
+  diagnoses       Diagnosis[]
+  lab_tests       Lab_test[]
+  medical_history Medical_history[]
+  prescription    Medication_items[]
+  patient         Patient            @relation(fields: [patient_id], references: [id])
+}
+
+model Medication_items {
+  id              String          @id @default(uuid())
+  record_id       String
+  practitioner_id String
+  medication_name String
+  dosage          String
+  refills         Int
+  instructions    String
+  frequency       String
+  notes           String?
+  status          Status
+  practitioner    Practitioner    @relation(fields: [practitioner_id], references: [id])
+  record          Patient_records @relation(fields: [record_id], references: [id])
+}
+
+model Diagnosis {
+  id              String           @id @default(uuid())
+  record_id       String
+  practitioner_id String
+  description     String
+  diagnosed_at    DateTime
+  status          Diagnosis_status @default(active)
+  record          Patient_records  @relation(fields: [record_id], references: [id])
+  practitioner    Practitioner     @relation(fields: [practitioner_id], references: [id])
+}
+
+model Lab_test {
+  id                      String          @id @default(uuid())
+  record_id               String
+  test_name               String
+  tested_at               DateTime
+  ordering_doctor         String
+  lab_facility            String
+  clinical_interpretation String
+  doctor                  Practitioner    @relation(fields: [ordering_doctor], references: [id])
+  result_values           Result_value[]
+  record                  Patient_records @relation(fields: [record_id], references: [id])
+}
+
+model Result_value {
+  id              String   @id @default(uuid())
+  lab_test_id     String
+  parameter       String
+  result          String
+  unit            String
+  reference_range String
+  lab_test        Lab_test @relation(fields: [lab_test_id], references: [id])
+}
+
+model Medical_history {
+  id          String          @id @default(uuid())
+  record_id   String
+  category    Category
+  name        String
+  notes       String?
+  record_date DateTime
+  created_at  DateTime        @default(now())
+  record      Patient_records @relation(fields: [record_id], references: [id])
+}
+
+enum Diagnosis_status {
+  active
+  cleared
+  monitoring
+}
+
+enum Category {
+  chronic_conditions
+  family_history
+  allergies
+  past_surgeries
+}
+
+enum Status {
+  active
+  inactive
+  cancelled
+  need_refills
+}
+
+enum Gender {
+  female
+  male
+}
+
+enum Role {
+  patient
+  doctor
+  nurse
+  specialist
+  admin
+}
