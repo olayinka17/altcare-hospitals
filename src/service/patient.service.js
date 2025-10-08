@@ -50,39 +50,7 @@ export const createPatient = async (
   return patient;
 };
 
-// export const createPatientRecord = async (
-//   blood_type,
-//   patient_id,
-//   history_category,
-//   name,
-//   notes,
-//   record_date
-// ) => {
-//   const existingRecord = await prisma.patient_record.findFirst({
-//     where: { patient_id },
-//   });
-//   if (existingRecord) {
-//     return new CustomError("Patient record already exist", 400);
-//   }
 
-//   const record = await prisma.patient_record.create({
-//     data: {
-//       blood_type,
-//       medical_history: {
-//         create: [
-//           {
-//             category: history_category,
-//             name,
-//             notes,
-//             record_date,
-//           },
-//         ],
-//       },
-//     },
-//   });
-
-//   return record
-// };
 
 export const createMedicalHistory = async (
   category,
